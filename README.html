@@ -1,0 +1,216 @@
+<h1 id="features">Features</h1>
+<ul>
+<li>Make Encryption of any string by console command</li>
+<li>Make Decryption of any string by console command</li>
+<li>Encrypted string from .env but Decrypted string will pass in
+config/database.php to establish database connection. So that
+credentials are not readable with bare eyes</li>
+</ul>
+<h2 id="acknowledgements">Acknowledgements</h2>
+<p>This code has been created below environment. If some thing occured
+due to version issue please adjust the code a little bit. - <a
+href="https://www.php.net/releases/8.0/en.php">php”: “^8.1.0</a> - <a
+href="https://laravel.com/docs/9.x/installation">laravel/framework”:
+“^9.19</a> # Encryption Decryption Once you are inside your Laravel
+project folder, execute the following command to create the
+EncryptDecryptService.php file in the app/Services directory:</p>
+<div class="sourceCode" id="cb1"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="fu">touch</span> app/Services/EncryptDecryptService.php</span></code></pre></div>
+<p>Now copy below code to the following file</p>
+<div class="sourceCode" id="cb2"><pre
+class="sourceCode php"><code class="sourceCode php"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="kw">&lt;?php</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a><span class="co">// app/Services/EncryptDecryptService.php</span></span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a><span class="kw">namespace</span> <span class="cn">A</span>pp\<span class="cn">S</span>ervices<span class="ot">;</span></span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a><span class="kw">use</span> <span class="cn">I</span>lluminate\<span class="cn">S</span>upport\<span class="cn">S</span>tr<span class="ot">;</span></span>
+<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a><span class="co">/**</span></span>
+<span id="cb2-10"><a href="#cb2-10" aria-hidden="true" tabindex="-1"></a><span class="co"> * Class EncryptDecryptService</span></span>
+<span id="cb2-11"><a href="#cb2-11" aria-hidden="true" tabindex="-1"></a><span class="co"> *</span></span>
+<span id="cb2-12"><a href="#cb2-12" aria-hidden="true" tabindex="-1"></a><span class="co"> * A service class to handle AES-256 encryption and decryption of sensitive data.</span></span>
+<span id="cb2-13"><a href="#cb2-13" aria-hidden="true" tabindex="-1"></a><span class="co"> * The encryption key is read from an external INI file.</span></span>
+<span id="cb2-14"><a href="#cb2-14" aria-hidden="true" tabindex="-1"></a><span class="co"> *</span></span>
+<span id="cb2-15"><a href="#cb2-15" aria-hidden="true" tabindex="-1"></a><span class="co"> * </span><span class="an">@package</span><span class="co"> </span><span class="cv">App\Services</span></span>
+<span id="cb2-16"><a href="#cb2-16" aria-hidden="true" tabindex="-1"></a><span class="co"> */</span></span>
+<span id="cb2-17"><a href="#cb2-17" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> <span class="cn">E</span>ncryptDecryptService</span>
+<span id="cb2-18"><a href="#cb2-18" aria-hidden="true" tabindex="-1"></a>{</span>
+<span id="cb2-19"><a href="#cb2-19" aria-hidden="true" tabindex="-1"></a>    <span class="kw">private</span> <span class="dt">string</span> <span class="va">$key</span><span class="ot">;</span></span>
+<span id="cb2-20"><a href="#cb2-20" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-21"><a href="#cb2-21" aria-hidden="true" tabindex="-1"></a>    <span class="co">/**</span></span>
+<span id="cb2-22"><a href="#cb2-22" aria-hidden="true" tabindex="-1"></a><span class="co">     * EncryptDecryptService constructor.</span></span>
+<span id="cb2-23"><a href="#cb2-23" aria-hidden="true" tabindex="-1"></a><span class="co">     *</span></span>
+<span id="cb2-24"><a href="#cb2-24" aria-hidden="true" tabindex="-1"></a><span class="co">     * Initializes the service and retrieves the encryption key from the INI file.</span></span>
+<span id="cb2-25"><a href="#cb2-25" aria-hidden="true" tabindex="-1"></a><span class="co">     *</span></span>
+<span id="cb2-26"><a href="#cb2-26" aria-hidden="true" tabindex="-1"></a><span class="co">     * </span><span class="an">@throws</span><span class="co"> </span><span class="cv">\Exception</span><span class="co"> If the encryption key is not found in the INI file.</span></span>
+<span id="cb2-27"><a href="#cb2-27" aria-hidden="true" tabindex="-1"></a><span class="co">     */</span></span>
+<span id="cb2-28"><a href="#cb2-28" aria-hidden="true" tabindex="-1"></a>    <span class="kw">public</span> <span class="kw">function</span> <span class="bu">__construct</span>()</span>
+<span id="cb2-29"><a href="#cb2-29" aria-hidden="true" tabindex="-1"></a>    {</span>
+<span id="cb2-30"><a href="#cb2-30" aria-hidden="true" tabindex="-1"></a>        <span class="va">$this</span>-&gt;<span class="fu">key</span> <span class="op">=</span> <span class="va">$this</span>-&gt;getKeyFromIniFile()<span class="ot">;</span></span>
+<span id="cb2-31"><a href="#cb2-31" aria-hidden="true" tabindex="-1"></a>    }</span>
+<span id="cb2-32"><a href="#cb2-32" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-33"><a href="#cb2-33" aria-hidden="true" tabindex="-1"></a>    <span class="co">/**</span></span>
+<span id="cb2-34"><a href="#cb2-34" aria-hidden="true" tabindex="-1"></a><span class="co">     * Encrypts the given value using AES-256 encryption.</span></span>
+<span id="cb2-35"><a href="#cb2-35" aria-hidden="true" tabindex="-1"></a><span class="co">     *</span></span>
+<span id="cb2-36"><a href="#cb2-36" aria-hidden="true" tabindex="-1"></a><span class="co">     * </span><span class="an">@param</span><span class="co"> </span><span class="cv">string</span><span class="co"> $value The value to be encrypted.</span></span>
+<span id="cb2-37"><a href="#cb2-37" aria-hidden="true" tabindex="-1"></a><span class="co">     * </span><span class="an">@return</span><span class="co"> string The base64-encoded encrypted value.</span></span>
+<span id="cb2-38"><a href="#cb2-38" aria-hidden="true" tabindex="-1"></a><span class="co">     * </span><span class="an">@throws</span><span class="co"> </span><span class="cv">\Exception</span><span class="co"> If encryption fails or the encryption key is invalid.</span></span>
+<span id="cb2-39"><a href="#cb2-39" aria-hidden="true" tabindex="-1"></a><span class="co">     */</span></span>
+<span id="cb2-40"><a href="#cb2-40" aria-hidden="true" tabindex="-1"></a>    <span class="kw">public</span> <span class="kw">function</span> encryption(<span class="dt">string</span> <span class="va">$value</span>)<span class="ot">:</span> <span class="dt">string</span></span>
+<span id="cb2-41"><a href="#cb2-41" aria-hidden="true" tabindex="-1"></a>    {</span>
+<span id="cb2-42"><a href="#cb2-42" aria-hidden="true" tabindex="-1"></a>        <span class="co">/*</span></span>
+<span id="cb2-43"><a href="#cb2-43" aria-hidden="true" tabindex="-1"></a><span class="co">        What is the IV size for AES 256?</span></span>
+<span id="cb2-44"><a href="#cb2-44" aria-hidden="true" tabindex="-1"></a><span class="co">        Algorithm   |   Key size (bytes) |  IV size (bytes)</span></span>
+<span id="cb2-45"><a href="#cb2-45" aria-hidden="true" tabindex="-1"></a><span class="co">        AES-256     |   32               |  16</span></span>
+<span id="cb2-46"><a href="#cb2-46" aria-hidden="true" tabindex="-1"></a><span class="co">        */</span></span>
+<span id="cb2-47"><a href="#cb2-47" aria-hidden="true" tabindex="-1"></a>        <span class="va">$iv</span> <span class="op">=</span> <span class="cn">S</span>tr::random()<span class="ot">;</span></span>
+<span id="cb2-48"><a href="#cb2-48" aria-hidden="true" tabindex="-1"></a>        dd(<span class="va">$iv</span>)<span class="ot">;</span></span>
+<span id="cb2-49"><a href="#cb2-49" aria-hidden="true" tabindex="-1"></a>        <span class="va">$encryptedValue</span> <span class="op">=</span> <span class="fu">openssl_encrypt</span>(<span class="va">$value</span><span class="ot">,</span> <span class="st">&#39;AES-256-CBC&#39;</span><span class="ot">,</span> <span class="va">$this</span>-&gt;<span class="fu">key</span><span class="ot">,</span> <span class="cn">OPENSSL_RAW_DATA</span><span class="ot">,</span> <span class="va">$iv</span>)<span class="ot">;</span></span>
+<span id="cb2-50"><a href="#cb2-50" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-51"><a href="#cb2-51" aria-hidden="true" tabindex="-1"></a>        <span class="cf">if</span> (<span class="va">$encryptedValue</span> <span class="op">===</span> <span class="kw">false</span>) {</span>
+<span id="cb2-52"><a href="#cb2-52" aria-hidden="true" tabindex="-1"></a>            <span class="cf">throw</span> <span class="kw">new</span> \<span class="bu">Exception</span>(<span class="cn">__METHOD__</span> <span class="op">.</span> <span class="st">&#39; : Encryption failed.&#39;</span>)<span class="ot">;</span></span>
+<span id="cb2-53"><a href="#cb2-53" aria-hidden="true" tabindex="-1"></a>        }</span>
+<span id="cb2-54"><a href="#cb2-54" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-55"><a href="#cb2-55" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> <span class="fu">base64_encode</span>(<span class="va">$iv</span> <span class="op">.</span> <span class="va">$encryptedValue</span>)<span class="ot">;</span></span>
+<span id="cb2-56"><a href="#cb2-56" aria-hidden="true" tabindex="-1"></a>    }</span>
+<span id="cb2-57"><a href="#cb2-57" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-58"><a href="#cb2-58" aria-hidden="true" tabindex="-1"></a>    <span class="co">/**</span></span>
+<span id="cb2-59"><a href="#cb2-59" aria-hidden="true" tabindex="-1"></a><span class="co">     * Decrypts the given encrypted value using AES-256 decryption.</span></span>
+<span id="cb2-60"><a href="#cb2-60" aria-hidden="true" tabindex="-1"></a><span class="co">     *</span></span>
+<span id="cb2-61"><a href="#cb2-61" aria-hidden="true" tabindex="-1"></a><span class="co">     * </span><span class="an">@param</span><span class="co"> </span><span class="cv">string</span><span class="co"> $encryptedValue The base64-encoded encrypted value.</span></span>
+<span id="cb2-62"><a href="#cb2-62" aria-hidden="true" tabindex="-1"></a><span class="co">     * </span><span class="an">@return</span><span class="co"> string The decrypted value.</span></span>
+<span id="cb2-63"><a href="#cb2-63" aria-hidden="true" tabindex="-1"></a><span class="co">     * </span><span class="an">@throws</span><span class="co"> </span><span class="cv">\Exception</span><span class="co"> If decryption fails or the encryption key is invalid.</span></span>
+<span id="cb2-64"><a href="#cb2-64" aria-hidden="true" tabindex="-1"></a><span class="co">     */</span></span>
+<span id="cb2-65"><a href="#cb2-65" aria-hidden="true" tabindex="-1"></a>    <span class="kw">public</span> <span class="kw">function</span> decryption(<span class="dt">string</span> <span class="va">$encryptedValue</span>)<span class="ot">:</span> <span class="dt">string</span></span>
+<span id="cb2-66"><a href="#cb2-66" aria-hidden="true" tabindex="-1"></a>    {</span>
+<span id="cb2-67"><a href="#cb2-67" aria-hidden="true" tabindex="-1"></a>        <span class="va">$data</span> <span class="op">=</span> <span class="fu">base64_decode</span>(<span class="va">$encryptedValue</span>)<span class="ot">;</span></span>
+<span id="cb2-68"><a href="#cb2-68" aria-hidden="true" tabindex="-1"></a>        <span class="va">$iv</span> <span class="op">=</span> <span class="fu">substr</span>(<span class="va">$data</span><span class="ot">,</span> <span class="dv">0</span><span class="ot">,</span> <span class="dv">16</span>)<span class="ot">;</span></span>
+<span id="cb2-69"><a href="#cb2-69" aria-hidden="true" tabindex="-1"></a>        <span class="cf">if</span> (<span class="fu">strlen</span>(<span class="va">$iv</span>) <span class="op">!=</span> <span class="dv">16</span>) {</span>
+<span id="cb2-70"><a href="#cb2-70" aria-hidden="true" tabindex="-1"></a>            <span class="cf">throw</span> <span class="kw">new</span> \<span class="bu">Exception</span>(<span class="cn">__METHOD__</span> <span class="op">.</span> <span class="st">&#39; : IV size is not 16 bytes.&#39;</span>)<span class="ot">;</span></span>
+<span id="cb2-71"><a href="#cb2-71" aria-hidden="true" tabindex="-1"></a>        }</span>
+<span id="cb2-72"><a href="#cb2-72" aria-hidden="true" tabindex="-1"></a>        <span class="va">$cipherText</span> <span class="op">=</span> <span class="fu">substr</span>(<span class="va">$data</span><span class="ot">,</span> <span class="dv">16</span>)<span class="ot">;</span></span>
+<span id="cb2-73"><a href="#cb2-73" aria-hidden="true" tabindex="-1"></a>        <span class="va">$decryptedValue</span> <span class="op">=</span> <span class="fu">openssl_decrypt</span>(<span class="va">$cipherText</span><span class="ot">,</span> <span class="st">&#39;AES-256-CBC&#39;</span><span class="ot">,</span> <span class="va">$this</span>-&gt;<span class="fu">key</span><span class="ot">,</span> <span class="cn">OPENSSL_RAW_DATA</span><span class="ot">,</span> <span class="va">$iv</span>)<span class="ot">;</span></span>
+<span id="cb2-74"><a href="#cb2-74" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-75"><a href="#cb2-75" aria-hidden="true" tabindex="-1"></a>        <span class="cf">if</span> (<span class="va">$decryptedValue</span> <span class="op">===</span> <span class="kw">false</span>) {</span>
+<span id="cb2-76"><a href="#cb2-76" aria-hidden="true" tabindex="-1"></a>            <span class="cf">throw</span> <span class="kw">new</span> \<span class="bu">Exception</span>(<span class="cn">__METHOD__</span> <span class="op">.</span> <span class="st">&#39; : Decryption failed.&#39;</span>)<span class="ot">;</span></span>
+<span id="cb2-77"><a href="#cb2-77" aria-hidden="true" tabindex="-1"></a>        }</span>
+<span id="cb2-78"><a href="#cb2-78" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-79"><a href="#cb2-79" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> <span class="va">$decryptedValue</span><span class="ot">;</span></span>
+<span id="cb2-80"><a href="#cb2-80" aria-hidden="true" tabindex="-1"></a>    }</span>
+<span id="cb2-81"><a href="#cb2-81" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-82"><a href="#cb2-82" aria-hidden="true" tabindex="-1"></a>    <span class="co">/**</span></span>
+<span id="cb2-83"><a href="#cb2-83" aria-hidden="true" tabindex="-1"></a><span class="co">     * Gets the encryption key from the INI file.</span></span>
+<span id="cb2-84"><a href="#cb2-84" aria-hidden="true" tabindex="-1"></a><span class="co">     *</span></span>
+<span id="cb2-85"><a href="#cb2-85" aria-hidden="true" tabindex="-1"></a><span class="co">     * </span><span class="an">@return</span><span class="co"> string The encryption key.</span></span>
+<span id="cb2-86"><a href="#cb2-86" aria-hidden="true" tabindex="-1"></a><span class="co">     * </span><span class="an">@throws</span><span class="co"> </span><span class="cv">\Exception</span><span class="co"> If the encryption key is not found in the INI file.</span></span>
+<span id="cb2-87"><a href="#cb2-87" aria-hidden="true" tabindex="-1"></a><span class="co">     */</span></span>
+<span id="cb2-88"><a href="#cb2-88" aria-hidden="true" tabindex="-1"></a>    <span class="kw">private</span> <span class="kw">function</span> getKeyFromIniFile()<span class="ot">:</span> <span class="dt">string</span></span>
+<span id="cb2-89"><a href="#cb2-89" aria-hidden="true" tabindex="-1"></a>    {</span>
+<span id="cb2-90"><a href="#cb2-90" aria-hidden="true" tabindex="-1"></a>        <span class="co">/*</span></span>
+<span id="cb2-91"><a href="#cb2-91" aria-hidden="true" tabindex="-1"></a><span class="co">        - MyProject</span></span>
+<span id="cb2-92"><a href="#cb2-92" aria-hidden="true" tabindex="-1"></a><span class="co">            |- app</span></span>
+<span id="cb2-93"><a href="#cb2-93" aria-hidden="true" tabindex="-1"></a><span class="co">            |  |- Services</span></span>
+<span id="cb2-94"><a href="#cb2-94" aria-hidden="true" tabindex="-1"></a><span class="co">            |     |- EncryptDecryptService.php</span></span>
+<span id="cb2-95"><a href="#cb2-95" aria-hidden="true" tabindex="-1"></a><span class="co">            |- public</span></span>
+<span id="cb2-96"><a href="#cb2-96" aria-hidden="true" tabindex="-1"></a><span class="co">            |  |- index.php</span></span>
+<span id="cb2-97"><a href="#cb2-97" aria-hidden="true" tabindex="-1"></a><span class="co">        - secrets.ini</span></span>
+<span id="cb2-98"><a href="#cb2-98" aria-hidden="true" tabindex="-1"></a><span class="co">        */</span></span>
+<span id="cb2-99"><a href="#cb2-99" aria-hidden="true" tabindex="-1"></a>        <span class="va">$iniFileName</span> <span class="op">=</span> <span class="st">&#39;EncryptionDecryptionConfig.ini&#39;</span><span class="ot">;</span></span>
+<span id="cb2-100"><a href="#cb2-100" aria-hidden="true" tabindex="-1"></a>        <span class="va">$iniFile</span> <span class="op">=</span> <span class="cn">__DIR__</span> <span class="op">.</span> <span class="st">&#39;/../../../&#39;</span> <span class="op">.</span> <span class="va">$iniFileName</span><span class="ot">;</span> <span class="co">// Replace with the actual path to your INI file.</span></span>
+<span id="cb2-101"><a href="#cb2-101" aria-hidden="true" tabindex="-1"></a>        <span class="va">$config</span> <span class="op">=</span> <span class="fu">parse_ini_file</span>(<span class="va">$iniFile</span><span class="ot">,</span> <span class="kw">true</span>)<span class="ot">;</span></span>
+<span id="cb2-102"><a href="#cb2-102" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-103"><a href="#cb2-103" aria-hidden="true" tabindex="-1"></a>        <span class="cf">if</span> (<span class="kw">isset</span>(<span class="va">$config</span>[<span class="st">&#39;key&#39;</span>])) {</span>
+<span id="cb2-104"><a href="#cb2-104" aria-hidden="true" tabindex="-1"></a>            <span class="cf">return</span> <span class="dt">(string)</span><span class="va">$config</span>[<span class="st">&#39;key&#39;</span>]<span class="ot">;</span></span>
+<span id="cb2-105"><a href="#cb2-105" aria-hidden="true" tabindex="-1"></a>        }</span>
+<span id="cb2-106"><a href="#cb2-106" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-107"><a href="#cb2-107" aria-hidden="true" tabindex="-1"></a>        <span class="cf">throw</span> <span class="kw">new</span> \<span class="bu">Exception</span>(<span class="cn">__METHOD__</span> <span class="op">.</span> <span class="st">&#39; : Encryption key not found in the INI file.&#39;</span>)<span class="ot">;</span></span>
+<span id="cb2-108"><a href="#cb2-108" aria-hidden="true" tabindex="-1"></a>    }</span>
+<span id="cb2-109"><a href="#cb2-109" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div>
+<p>Now to test, Lets encrypt and decrypt a string. But before that lets
+create a console command to do these operations</p>
+<pre><code>php artisan make:command EncryptDecryptCommand</code></pre>
+<p>Put below code on the file
+<em>app/Console/Commands/EncryptDecryptCommand.php</em></p>
+<pre><code>&lt;?php
+// app/Console/Commands/EncryptDecryptCommand.php
+
+namespace App\Console\Commands;
+
+use App\Services\EncryptDecryptService;
+use Illuminate\Console\Command;
+use Illuminate\Support\Facades\Hash;
+use App\Models\User;
+
+class EncryptDecryptCommand extends Command
+{
+    protected $signature = &#39;encrypt:decrypt&#39;;
+    protected $description = &#39;Encrypt or decrypt a given string&#39;;
+
+    public function handle()
+    {
+        $this-&gt;info(&#39;Authentication required to proceed.&#39;);
+        $email = $this-&gt;ask(&#39;Enter admin email:&#39;);
+        $password = $this-&gt;secret(&#39;Enter admin password:&#39;);
+
+        // Perform admin authentication
+        $user = User::where(&#39;email&#39;, $email)-&gt;first();
+
+        if (!$user || !Hash::check($password, $user-&gt;password)) {
+            $this-&gt;error(&#39;Authentication failed. Invalid email or password.&#39;);
+            return;
+        }
+
+        $this-&gt;info(&#39;Authentication successful.&#39;);
+        $encryptDecryptService = new EncryptDecryptService();
+
+        $option = $this-&gt;choice(&#39;Choose an option:&#39;, [&#39;Encrypt&#39;, &#39;Decrypt&#39;]);
+        $input = $this-&gt;ask(&#39;Enter the string to &#39; . strtolower($option) . &#39;:&#39;);
+
+        if ($option === &#39;Encrypt&#39;) {
+            $output = $encryptDecryptService-&gt;encryption($input);
+        } else {
+            $output = $encryptDecryptService-&gt;decryption($input);
+        }
+
+        $this-&gt;info(&#39;Output: &#39; . $output);
+    }
+}</code></pre>
+<p>Now you can run the command from the terminal</p>
+<pre><code>php artisan encrypt:decrypt</code></pre>
+<p>The command will prompt you to enter your admin credentials</p>
+<pre><code>Enter admin email:
+Enter admin password:</code></pre>
+<p>If the authentication is successful, the command will display</p>
+<pre><code>Authentication successful.</code></pre>
+<p>Choose an option</p>
+<pre><code>Choose an option:
+  [0] Encrypt
+  [1] Decrypt</code></pre>
+<p>Based on your selection, you will be prompted to enter the string to
+encrypt or decrypt</p>
+<pre><code>Enter the string to encrypt/decrypt:</code></pre>
+<p>The command will display the encrypted or decrypted output</p>
+<pre><code>&#39;Output: &#39; . $output</code></pre>
+<p>So the test works fine. Now lets put this in
+<em>config/database.php</em> and put below code at top of the file.</p>
+<div class="sourceCode" id="cb11"><pre
+class="sourceCode php"><code class="sourceCode php"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="cf">try</span> {</span>
+<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a>    <span class="va">$DbUserName</span> <span class="op">=</span> (<span class="kw">new</span> \<span class="cn">A</span>pp\<span class="cn">S</span>ervices\<span class="cn">E</span>ncryptDecryptService())-&gt;decryption(env(<span class="st">&#39;DB_USERNAME&#39;</span>))<span class="ot">;</span></span>
+<span id="cb11-3"><a href="#cb11-3" aria-hidden="true" tabindex="-1"></a>    <span class="va">$DbUserPassword</span> <span class="op">=</span> (<span class="kw">new</span> \<span class="cn">A</span>pp\<span class="cn">S</span>ervices\<span class="cn">E</span>ncryptDecryptService())-&gt;decryption(env(<span class="st">&#39;DB_PASSWORD&#39;</span>))<span class="ot">;</span></span>
+<span id="cb11-4"><a href="#cb11-4" aria-hidden="true" tabindex="-1"></a>} <span class="cf">catch</span> (\<span class="bu">Exception</span> <span class="va">$e</span>) {</span>
+<span id="cb11-5"><a href="#cb11-5" aria-hidden="true" tabindex="-1"></a>    dd(<span class="cn">__FILE__</span> <span class="op">.</span> <span class="st">&#39; | &#39;</span> <span class="op">.</span> <span class="va">$e</span>-&gt;getMessage())<span class="ot">;</span></span>
+<span id="cb11-6"><a href="#cb11-6" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div>
+<p>Need to tweak little bit in</p>
+<pre><code> &#39;connections&#39; =&gt; [
+        &#39;mysql&#39; =&gt; [
+         
+            &#39;database&#39; =&gt; env(&#39;DB_DATABASE&#39;, &#39;forge&#39;),
+            //&#39;username&#39; =&gt; env(&#39;DB_USERNAME&#39;, &#39;forge&#39;),
+            // &#39;password&#39; =&gt; env(&#39;DB_PASSWORD&#39;, &#39;&#39;),
+            &#39;username&#39; =&gt; $DbUserName,
+            &#39;password&#39; =&gt; $DbUserPassword,
+        ],
+]</code></pre>
+<p>Now if you set encrypted value for <em>DB_USERNAME</em> &amp;
+<em>DB_PASSWORD</em> in <em>.env</em> file this will be work.</p>
