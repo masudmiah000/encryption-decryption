@@ -65,7 +65,7 @@ class EncryptDecryptService
         AES-256	    |   32	             |  16
         */
         $iv = Str::random();
-        dd($iv);
+      
         $encryptedValue = openssl_encrypt($value, 'AES-256-CBC', $this->key, OPENSSL_RAW_DATA, $iv);
 
         if ($encryptedValue === false) {
